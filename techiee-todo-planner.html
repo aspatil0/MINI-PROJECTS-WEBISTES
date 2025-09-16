@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASP DAY PLANNER</title>
+  <style>
+    :root{
+      --bg1:#1a1b26; --bg2:#24283b;
+      --card:#2a2e3f;
+      --text:#a9b1d6;
+      --text-bright:#c0caf5;
+      --muted:#565f89;
+      --accent-schedule:#7aa2f7;
+      --accent-tasks:#f7768e;
+      --accent-websites:#9ece6a;
+      --accent-events:#e0af68;
+      --gradient-1: linear-gradient(135deg, rgba(122,162,247,0.1), rgba(231,118,142,0.1));
+      --gradient-2: linear-gradient(135deg, rgba(158,206,106,0.1), rgba(224,175,104,0.1));
+      --soft-shadow:0 8px 24px rgba(0,0,0,0.2);
+      --rounded:16px;
+    }
+    *{box-sizing:border-box}
+    @media (max-width: 480px) {
+      :root {
+        --rounded: 12px;
+      }
+      body {
+        padding: 12px;
+      }
+      .wrap {
+        padding: 0 8px;
+      }
+      header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 16px;
+      }
+      .floating-btn {
+        bottom: 16px;
+        right: 16px;
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+      }
+      .modal-content {
+        padding: 16px;
+      }
+      li.item {
+        padding: 12px;
+      }
+      .tab-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+      }
+    }
+    body{margin:0;font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:var(--text);-webkit-font-smoothing:antialiased;display:flex;justify-content:center;padding:20px;min-height:100vh;line-height:1.6;}
+    .wrap{width:100%;max-width:800px;position:relative;padding:0 16px;}
+    header{text-align:center;margin-bottom:32px;position:relative;}
+    header h1{margin:0;font-size:2.5rem;color:var(--text-bright);font-weight:700;letter-spacing:-0.03em;margin-bottom:8px;}
+    header p.subtitle{color:var(--muted);font-size:1.1rem;margin:0;}
+    .welcome-card{background:var(--gradient-1);border-radius:var(--rounded);padding:24px;margin-bottom:32px;border:1px solid rgba(255,255,255,0.1);}
+    .welcome-text h2{color:var(--text-bright);margin:0 0 8px 0;font-size:1.4rem;}
+    .welcome-text p{margin:0;color:var(--text);}
+    .empty-state{text-align:center;padding:40px 20px;color:var(--muted);background:var(--gradient-2);border-radius:var(--rounded);margin:20px 0;}
+    .empty-state p{margin:8px 0 0 0;}
+    .tabs{display:flex;overflow-x:auto;gap:12px;margin-bottom:24px;padding:4px;-ms-overflow-style:none;}
+    .tabs::-webkit-scrollbar{display:none;width:0;height:0;}
+    .tab-btn{flex-shrink:0;background:var(--card);border:1px solid rgba(255,255,255,0.1);padding:10px 20px;border-radius:12px;cursor:pointer;transition:all 0.3s ease;font-size:0.95rem;color:var(--text);font-weight:500;}
+    .tab-btn:hover{background:rgba(255,255,255,0.05);transform:translateY(-1px);}
+    .tab-btn.active{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:var(--text-bright);}
+    .card{background:var(--card);border-radius:var(--rounded);padding:20px;box-shadow:var(--soft-shadow);margin-bottom:20px;display:none;border:1px solid rgba(255,255,255,0.1);}
+    .card.active{display:block;animation:fadeIn 0.3s ease;}
+    ul.list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+    li.item{display:flex;justify-content:space-between;align-items:center;padding:16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:all 0.3s ease;}
+    li.item:hover{transform:translateX(4px);background:rgba(255,255,255,0.05);}
+    li.item button{background:none;border:none;color:var(--text);font-size:1.1rem;cursor:pointer;padding:8px;border-radius:8px;transition:all 0.2s ease;}
+    li.item button:hover{background:rgba(255,255,255,0.1);transform:scale(1.1);}
+    .item.done{opacity:0.5;text-decoration:line-through;}
+    .floating-btn{position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:16px;background:var(--accent-schedule);box-shadow:0 8px 32px rgba(122,162,247,0.3);display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:var(--bg1);cursor:pointer;z-index:100;transition:all 0.3s ease;}
+    .floating-btn:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(122,162,247,0.4);}
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:101;}
+    .modal-content{background:var(--card);border-radius:var(--rounded);padding:24px;width:90%;max-width:420px;box-shadow:var(--soft-shadow);border:1px solid rgba(255,255,255,0.1);animation:modalIn 0.3s ease;}
+    .modal-content h2{margin-top:0;color:var(--text-bright);text-align:center;font-size:1.5rem;font-weight:600;}
+    .section-select{display:flex;justify-content:space-around;margin:16px 0;gap:8px;}
+    .section-select button{flex:1;margin:0;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:1.2rem;background:rgba(255,255,255,0.05);transition:all 0.3s ease;}
+    .section-select button:hover{transform:translateY(-2px);}
+    .section-select button.schedule{background:var(--accent-schedule)}
+    .section-select button.tasks{background:var(--accent-tasks)}
+    .section-select button.websites{background:var(--accent-websites)}
+    .section-select button.events{background:var(--accent-events)}
+    .modal-content input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);margin-bottom:16px;font-size:1rem;background:rgba(255,255,255,0.05);color:var(--text-bright);transition:all 0.3s ease;}
+    .modal-content input:focus{outline:none;border-color:var(--accent-schedule);background:rgba(255,255,255,0.1);}
+    .modal-content button.save-btn{width:100%;padding:12px;border:none;border-radius:12px;background:var(--accent-schedule);color:var(--bg1);font-size:1rem;font-weight:500;cursor:pointer;transition:all 0.3s ease;}
+    .modal-content button.save-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(122,162,247,0.3);}
+    .progress-ring{position:fixed;bottom:20px;right:20px;width:64px;height:64px;pointer-events:none;z-index:99;}
+    svg{transform:rotate(-90deg);}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+    
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Daily Planner</h1>
+      <p class="subtitle">Organize your day efficiently</p>
+    </header>
+
+    <div class="welcome-card">
+      <div class="welcome-text">
+        <h2>Welcome Back! 👋</h2>
+        <p>Track your schedule, tasks, and important events all in one place.</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="openTab(event,'schedule')">📅 Schedule</button>
+      <button class="tab-btn" onclick="openTab(event,'tasks')">📝 Tasks</button>
+      <button class="tab-btn" onclick="openTab(event,'websites')">🌐 Websites</button>
+      <button class="tab-btn" onclick="openTab(event,'events')">🎉 Events</button>
+    </div>
+
+    <div id="schedule" class="card active"><ul id="schedule-list" class="list"></ul></div>
+    <div id="tasks" class="card"><ul id="tasks-list" class="list"></ul></div>
+    <div id="websites" class="card"><ul id="websites-list" class="list"></ul></div>
+    <div id="events" class="card"><ul id="events-list" class="list"></ul></div>
+  </div>
+
+  <div class="floating-btn" onclick="openModal()">➕</div>
+  <svg class="progress-ring" width="64" height="64">
+    <circle stroke="#eee" stroke-width="6" fill="transparent" r="28" cx="32" cy="32"></circle>
+    <circle stroke="#c9a86a" stroke-width="6" fill="transparent" r="28" cx="32" cy="32" stroke-dasharray="175.84" stroke-dashoffset="175.84"></circle>
+  </svg>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2>Add Item</h2>
+      <div class="section-select">
+        <button class="schedule" onclick="selectSection('schedule')">📅</button>
+        <button class="tasks" onclick="selectSection('tasks')">📝</button>
+        <button class="websites" onclick="selectSection('websites')">🌐</button>
+        <button class="events" onclick="selectSection('events')">🎉</button>
+      </div>
+      <input id="modal-input" placeholder="Enter item">
+      <button class="save-btn" onclick="saveModalItem()">Save</button>
+    </div>
+  </div>
+
+  <script>
+    const data = JSON.parse(localStorage.getItem('plannerData')) || {schedule:[],tasks:[],websites:[],events:[]};
+    let currentSection = 'schedule';
+
+    function save(){ localStorage.setItem('plannerData',JSON.stringify(data)); updateProgress(); }
+
+    function renderSection(section){
+      const list=document.getElementById(section+'-list'); 
+      list.innerHTML='';
+      
+      if(data[section].length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        const emoji = {
+          'schedule': '📅',
+          'tasks': '📝',
+          'websites': '🌐',
+          'events': '🎉'
+        }[section];
+        emptyState.innerHTML = `
+          <div style="font-size: 2rem;">${emoji}</div>
+          <p>No ${section} added yet. Click the + button to get started!</p>
+        `;
+        list.appendChild(emptyState);
+        return;
+      }
+      
+      data[section].forEach((item,i)=>{
+        const li=document.createElement('li'); li.className='item'+(item.completed?' done':'');
+        li.innerHTML=`<span>${item.text||item.title}</span> <div><button onclick="toggleComplete('${section}',${i})">✔</button> <button onclick="removeItem('${section}',${i})">🗑</button></div>`;
+        list.appendChild(li);
+      });
+    }
+
+    function toggleComplete(section,index){ data[section][index].completed=!data[section][index].completed; save(); renderSection(section); }
+    function removeItem(section,index){ data[section].splice(index,1); save(); renderSection(section); }
+
+    ['schedule','tasks','websites','events'].forEach(renderSection);
+
+    function openTab(evt,id){ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); evt.currentTarget.classList.add('active'); document.querySelectorAll('.card').forEach(c=>c.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+    function openModal(){ document.getElementById('modal').style.display='flex'; document.getElementById('modal-input').value=''; }
+    function selectSection(section){ currentSection=section; }
+    function saveModalItem(){ const val=document.getElementById('modal-input').value.trim(); if(!val) return; data[currentSection].push({text:val,completed:false}); save(); renderSection(currentSection); document.getElementById('modal').style.display='none'; }
+    window.onclick=e=>{ if(e.target==document.getElementById('modal')) document.getElementById('modal').style.display='none'; }
+
+    // progress ring
+    const circle=document.querySelector('.progress-ring circle:nth-child(2)');
+    const radius=circle.r.baseVal.value; const circumference=2*Math.PI*radius; circle.style.strokeDasharray=`${circumference}`;
+    function updateProgress(){
+      let total=0,done=0;
+      Object.values(data).forEach(arr=>arr.forEach(i=>{total++; if(i.completed) done++;}));
+      const offset=circumference-(done/total||0)*circumference; circle.style.strokeDashoffset=offset;
+    }
+    updateProgress();
+
+    // Auto-save when page is about to close
+    window.addEventListener('beforeunload', save);
+  </script>
+</body>
+</html>
